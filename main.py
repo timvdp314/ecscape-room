@@ -26,7 +26,7 @@ if __name__ == "__main__":
     pygame.display.init()
 
     window_size = 512
-    grid_size = 6
+    grid_size = 8
     window = pygame.display.set_mode(
             (window_size, window_size)
         )
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     agent = Agent((2, 2), grid_size = grid_size)
     agent.reset_policy()
 
-    target = RewardObject((3,4), 5, "exam.png", True)
+    target = RewardObject((4,5), 10, "exam.png", True)
 
     school_env.register_agent(agent.grid_pos)
     school_env.register_target(target.grid_pos, 5)
@@ -63,6 +63,8 @@ if __name__ == "__main__":
                 if event.key == pygame.K_SPACE:
                     action = agent.sample_action()
                     obs, reward, done, info = school_env.step(action)
+                    if done:
+                        running = False
 
                     agent.grid_pos = obs["agent"]
 
@@ -83,6 +85,7 @@ if __name__ == "__main__":
         renderer.draw_object(agent.grid_pos, agent.img)
         renderer.draw_object(pill.grid_pos, pill.img)
         renderer.draw_object(pill2.grid_pos, pill.img)
+        renderer.draw_object(target.grid_pos, target.img)
 
         renderer.render_frame()
         clock.tick(60)
