@@ -6,7 +6,7 @@ import numpy as np
 from env import SchoolEnv
 from reward import RewardObject
 from agent import Agent
-
+import time
 import pygame
 
 from gymnasium.envs.registration import register
@@ -73,8 +73,7 @@ if __name__ == "__main__":
                     obs, info = school_env.reset()
 
                     agent.grid_pos = obs["agent"]
-
-        
+          
         renderer.clear_frame()
         renderer.draw_gridlines()
 
@@ -88,5 +87,15 @@ if __name__ == "__main__":
 
         renderer.render_frame()
         clock.tick(60)
+
+        action = agent.action()
+        obs, reward, done, info = school_env.step(action)
+        if done:
+            running = False
+
+        agent.set_position(obs["agent"])
+
+        logging.info("Obtained reward: {}".format(reward))
+        time.sleep(1)
 
     school_env.close()

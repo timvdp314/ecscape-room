@@ -21,3 +21,6 @@ class Policy(ABC):
     def move(self):
         pass
     
+    @abstractmethod
+    def terminate(self):
+        pass

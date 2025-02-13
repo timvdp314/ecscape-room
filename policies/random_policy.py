@@ -15,3 +15,4 @@ class RandomPolicy(Policy, ABC):
     
         assert("Something is wrong with the agent's policy!")
         return None
+    
