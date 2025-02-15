@@ -1,5 +1,5 @@
 class Cell:
-    def __init__(self, grid_pos, reward, img, is_terminal = False, is_solid = False):
+    def __init__(self, grid_pos, reward, img = None, is_terminal = False, is_solid = False):
         self.grid_pos = grid_pos
         self.reward = reward
         self.img = img

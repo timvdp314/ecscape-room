@@ -10,7 +10,7 @@ class RandomPolicy(Policy, ABC):
 
         for act, prob in self.movement[self.grid_pos].items():
             threshold += prob
-            if (num <= threshold):
+            if num <= threshold:
                 return act
     
         assert("Something is wrong with the agent's policy!")
