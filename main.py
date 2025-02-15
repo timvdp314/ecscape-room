@@ -36,7 +36,7 @@ if __name__ == "__main__":
     school_env: SchoolEnv = SchoolEnv(grid_size)
     pill = RewardObject((1, 3), 2, "pill.png", False)
     pill2 = RewardObject((3, 4), 2, "pill.png", False)
-    agent = Agent((2, 2), grid_size = grid_size)
+    agent = Agent((2, 2), grid_size)
 
     target = RewardObject((4,5), 10, "exam.png", True)
 
