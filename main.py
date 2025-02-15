@@ -35,10 +35,11 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     renderer = EnvRenderer(window, window_size, grid_size)
-    agent = Agent((2, 2), grid_size)
+    agent_pos = (2, 2)
     target = Cell((4,5), 10, "exam.png", True)
 
-    school_env: SchoolEnv = SchoolEnv(agent.get_position(), target, grid_size)
+    school_env: SchoolEnv = SchoolEnv(agent_pos, target, grid_size)
+    agent = Agent(school_env.grid, agent_pos, grid_size)
 
     pill1 = Cell((1, 3), -2, "pill.png")
     pill2 = Cell((3, 4), -2, "pill.png")
