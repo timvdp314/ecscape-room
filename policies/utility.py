@@ -14,6 +14,7 @@ def evaluate_policy(policy: Policy, possible_rewards = None, gamma: float = 1, t
             if cell.is_terminal:
                 continue
 
+            # TODO: For edge tiles add simulated action.
             for action in policy.movement[s]:
                 next_state = (action[0] + s[0], action[1] + s[1])
                 v += policy.movement[s][action] * (policy.grid[next_state].reward + gamma * possible_rewards[next_state])

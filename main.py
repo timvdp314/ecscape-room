@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     renderer = EnvRenderer(window, window_size, grid_size)
     agent_pos = (2, 2)
-    target = Cell((4,5), 10, "exam.png", True)
+    target = Cell((7,7), 10, "exam.png", True)
 
     school_env: SchoolEnv = SchoolEnv(agent_pos, target, grid_size)
     agent = Agent(school_env.grid, agent_pos, grid_size)
