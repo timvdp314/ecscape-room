@@ -39,7 +39,6 @@ if __name__ == "__main__":
     target = Cell((7,7), 10, "exam.png", True)
 
     school_env: SchoolEnv = SchoolEnv(agent_pos, target, grid_size)
-    agent = Agent(school_env.grid, agent_pos, grid_size)
 
     pill1 = Cell((1, 3), -2, "pill.png")
     pill2 = Cell((3, 4), -2, "pill.png")
@@ -51,6 +50,8 @@ if __name__ == "__main__":
     school_env.register_object(pill1)
     school_env.register_object(pill2)
 
+    # Tha agent needs to be created AFTER all of the objects have been added to the environment.
+    agent = Agent(school_env.grid, agent_pos, grid_size)
     running = True
 
     obs, info = school_env.reset()
