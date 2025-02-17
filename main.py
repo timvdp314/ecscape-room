@@ -99,7 +99,6 @@ if __name__ == "__main__":
         renderer.draw_object(target.grid_pos, target.img)
 
         renderer.render_frame()
-        clock.tick(60)
 
         action = agent.action()
         obs, reward, done, info = school_env.step(action)
@@ -109,6 +108,6 @@ if __name__ == "__main__":
         agent.set_position(obs["agent"])
 
         logging.info("Obtained reward: {}".format(reward))
-        time.sleep(1)
+        clock.tick(1)
 
     school_env.close()
