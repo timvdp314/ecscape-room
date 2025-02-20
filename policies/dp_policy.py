@@ -2,12 +2,15 @@ from abc import ABC
 from policies.policy import Policy
 import random
 
-from policies.utility import improve_policy
+from policies.utility import improve_policy, plot_dp_heatmap
+
 
 class DPPolicy(Policy, ABC):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, grid_pos: (int, int), grid: dict[tuple[int, int]], grid_size: int = 6):
+        super().__init__(grid_pos, grid, grid_size)
         possible_rewards = improve_policy(self)
+
+        plot_dp_heatmap(self, possible_rewards)
 
     def move(self):
         num = random.uniform(0, 1)
