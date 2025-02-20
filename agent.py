@@ -2,10 +2,10 @@ from policies.policy import Policy
 from policies.random_policy import RandomPolicy
 
 class Agent:
-    def __init__(self, grid_pos = (0, 0), grid_size = 5, img = "robot.png"):
+    def __init__(self, grid: dict[tuple[int, int]], grid_pos: (int, int) = (0, 0), grid_size: int = 5, img: str = "robot.png"):
         self.img = img
 
-        self.policy: Policy = RandomPolicy(grid_pos, grid_size)
+        self.policy: Policy = RandomPolicy(grid_pos, grid, grid_size)
         self.last_reward_val = 0
 
     def action(self) -> (int, int):
