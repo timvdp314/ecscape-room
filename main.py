@@ -35,7 +35,7 @@ if __name__ == "__main__":
     clock = pygame.time.Clock()
 
     renderer = EnvRenderer(window, window_size, grid_size)
-    agent_pos = (2, 2)
+    agent_pos = (2, 3)
     target = Cell((7,7), 10, "exam.png", True)
 
     school_env: SchoolEnv = SchoolEnv(agent_pos, target, grid_size)
