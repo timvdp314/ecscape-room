@@ -31,3 +31,39 @@ def evaluate_policy(policy: Policy, possible_rewards = None, gamma: float = 0.5,
             possible_rewards[s] = v
 
     return possible_rewards
+
+
+def improve_policy(policy: Policy, gamma: float = 0.5):
+        while True:
+            possible_rewards = evaluate_policy(policy)
+            # Iterate for each cell in the grid.
+            for s in policy.grid.keys():
+                # Get the cell associated with the coordinate (s).
+                cell = policy.grid[s]
+                if cell.is_terminal:
+                    continue
+                old_action = policy.movement[s]
+                eval_actions = {}
+                
+                # Iterate over each action possible in this cell.
+                for action in policy.movement[s]:
+                    next_state = (action[0] + s[0], action[1] + s[1])
+                    next_reward = policy.grid[next_state].reward + gamma*possible_rewards[next_state]
+                    eval_actions[action] = next_reward
+                
+                best_actions = [action for action,reward in eval_actions if reward == max(eval_actions.values())]
+                action_prob = 1/len(best_actions)
+                new_actions = {}
+
+                for action in best_actions:
+                    new_actions[action] = action_prob
+
+                if old_action != new_actions:
+                    policy.movement[s] = new_actions
+                else:
+                    return possible_rewards
+
+
+
+
+
