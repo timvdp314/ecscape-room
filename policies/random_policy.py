@@ -3,9 +3,6 @@ from abc import ABC
 from policies.policy import Policy
 import random
 
-from policies.utility import evaluate_policy, improve_policy
-
-
 class RandomPolicy(Policy, ABC):
     def move(self):
         num = random.uniform(0, 1)
