@@ -4,15 +4,15 @@ from cell import Cell
 from policies.policy import Policy
 import random
 
-from policies.utility import plot_dp_heatmap
+from policies.utility import plot_pi_heatmap
 
 
-class DPPolicy(Policy, ABC):
+class PolicyIterationPolicy(Policy, ABC):
     def __init__(self, grid_pos: (int, int), grid: dict[tuple[int, int]], grid_size: int = 6):
         super().__init__(grid_pos, grid, grid_size)
         possible_rewards = self.improve_policy()
 
-        plot_dp_heatmap(self, possible_rewards)
+        plot_pi_heatmap(grid_size, self.movement, possible_rewards)
 
     def move(self):
         num = random.uniform(0, 1)

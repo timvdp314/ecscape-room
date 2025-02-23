@@ -1,5 +1,5 @@
-from policies.dp_policy import DPPolicy
-from policies.optimal_policy import OptimalPolicy
+from policies.policy_iteration_policy import PolicyIterationPolicy
+from policies.value_iteration_policy import ValueIterationPolicy
 from policies.policy import Policy
 from policies.random_policy import RandomPolicy
 
@@ -7,7 +7,7 @@ class Agent:
     def __init__(self, grid: dict[tuple[int, int]], grid_pos: (int, int) = (0, 0), grid_size: int = 5, img: str = "robot.png"):
         self.img = img
 
-        self.policy: Policy = OptimalPolicy(grid_pos, grid, grid_size)
+        self.policy: Policy = PolicyIterationPolicy(grid_pos, grid, grid_size)
         self.last_reward_val = 0
 
     def action(self) -> (int, int):
