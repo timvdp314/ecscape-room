@@ -1,4 +1,5 @@
 from policies.dp_policy import DPPolicy
+from policies.optimal_policy import OptimalPolicy
 from policies.policy import Policy
 from policies.random_policy import RandomPolicy
 
