@@ -6,8 +6,8 @@ import random
 
 from policies.utility import plot_pi_heatmap
 
-
 class PolicyIterationPolicy(Policy, ABC):
+
     def __init__(self, grid_pos: (int, int), grid: dict[tuple[int, int]], grid_size: int = 6):
         super().__init__(grid_pos, grid, grid_size)
         possible_rewards = self.improve_policy()
@@ -29,11 +29,10 @@ class PolicyIterationPolicy(Policy, ABC):
     def terminate(self):
         return super().terminate()
 
-    def evaluate_policy(self, potential_rewards: dict[(int, int)] = None, gamma: float = 0.8,
+    def evaluate_policy(self, gamma: float = 0.8,
                         theta: float = 0.001) -> dict[(int, int)]:
         # If not provided with a list of possible rewards, initialize a list for the entire grid with value 0.
-        if potential_rewards is None:
-            potential_rewards = {state: 0 for state in self.grid.keys()}
+        potential_rewards = {state: 0 for state in self.grid.keys()}
 
         delta: float = theta + 1
         while delta > theta:

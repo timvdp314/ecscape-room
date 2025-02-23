@@ -5,17 +5,20 @@ from cell import Cell
 from policies.policy import Policy
 from policies.utility import plot_vi_heatmap
 
-
 class ValueIterationPolicy(Policy, ABC):
-    optimal_actions: dict[(int, int)] = {}
 
     def __init__(self, grid_pos: (int, int), grid: dict[tuple[int, int]], grid_size: int = 6):
         super().__init__(grid_pos, grid, grid_size)
-        self.optimal_actions, potential_rewards = self.iterate_values()
-        plot_vi_heatmap(grid_size, self.optimal_actions, potential_rewards)
+        optimal_actions, potential_rewards = self.iterate_values()
+
+        # Update the movement of the policy based on the best actions found.
+        for position in optimal_actions:
+            self.movement[position] = optimal_actions[position]
+
+        plot_vi_heatmap(grid_size, optimal_actions, potential_rewards)
 
     def move(self):
-        return self.optimal_actions[self.grid_pos]
+        return self.movement[self.grid_pos]
 
     def terminate(self):
         return super().terminate()
