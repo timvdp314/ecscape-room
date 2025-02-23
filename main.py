@@ -1,14 +1,8 @@
 import logging
 
-import gymnasium as gym
-from gymnasium import spaces
-import numpy as np
-
 from cell import Cell
 from env import SchoolEnv
-from reward import RewardObject
 from agent import Agent
-import time
 import pygame
 
 from gymnasium.envs.registration import register
