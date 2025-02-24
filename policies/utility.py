@@ -1,6 +1,5 @@
 from policies.policy import Policy
 
-
 def evaluate_policy(policy: Policy, possible_rewards = None, gamma: float = 0.5, theta: float = 0.001):
     # If not provided with a list of possible rewards, initialize a list for the entire grid with value 0.
     if possible_rewards is None:
@@ -31,3 +30,6 @@ def evaluate_policy(policy: Policy, possible_rewards = None, gamma: float = 0.5,
             possible_rewards[s] = v
 
     return possible_rewards
+
+
+

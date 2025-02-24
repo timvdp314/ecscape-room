@@ -1,9 +1,10 @@
 import gymnasium as gym
 import numpy as np
 from cell import Cell
+import math_utils
 
 class SchoolEnv(gym.Env):
-    def __init__(self, agent_location: (int, int), target: Cell, grid_size = 5):
+    def __init__(self, agent_location: tuple[int, int], target: Cell, grid_size = 5):
         super(SchoolEnv, self).__init__()
 
         self.grid_size = grid_size  # The size of the square grid
@@ -22,7 +23,7 @@ class SchoolEnv(gym.Env):
         self.reward_reset_locations: dict[tuple[int, int]] = dict()
 
         # Base reward for moving to an empty Cell in the grid.
-        self.base_reward: float = -1
+        self.base_reward: float = -1.0
 
         # Dictionary of the grid mapping coordinates to Cells.
         self.grid: dict[tuple[int, int]] = {}
@@ -78,7 +79,7 @@ class SchoolEnv(gym.Env):
         temp_pos = self.agent_location
         self.agent_location = np.array(self.agent_location) + np.array(action)
         self.agent_location = np.clip(self.agent_location, 0, self.grid_size - 1)
-        self.agent_location = tuple(self.agent_location)
+        self.agent_location = math_utils.np_to_tuple(self.agent_location)
 
         cell: Cell = self.grid[self.agent_location]
 
