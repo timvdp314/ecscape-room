@@ -6,6 +6,7 @@ from agent import Agent
 import pygame
 
 from gymnasium.envs.registration import register
+import gymnasium as gym
 
 from disp import EnvRenderer
 
