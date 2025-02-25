@@ -3,13 +3,8 @@ from abc import ABC
 from policies.policy import Policy
 import random
 
-from policies.utility import evaluate_policy
-
-
 class RandomPolicy(Policy, ABC):
     def move(self):
-        possible_rewards = evaluate_policy(self)
-
         num = random.uniform(0, 1)
         threshold = 0.0
 
