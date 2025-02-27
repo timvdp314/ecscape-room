@@ -3,6 +3,8 @@ import numpy as np
 from cell import Cell
 import math_utils
 
+from algorithms.utils import Observation
+
 class SchoolEnv(gym.Env):
     def __init__(self, agent_location: tuple[int, int], target: Cell, grid_size = 5):
         super(SchoolEnv, self).__init__()
@@ -26,25 +28,8 @@ class SchoolEnv(gym.Env):
         self.base_reward: float = -1.0
 
         # Dictionary of the grid mapping coordinates to Cells.
-        self.grid: dict[tuple[int, int]] = {}
+        self.grid: dict[tuple[int, int], Cell] = {}
         self.init_grid() # Creates a grid with empty Cells.
-
-
-    def get_obs(self):
-        obs_dict = dict()
-
-        obs_dict["agent"] = None if self.agent_location is None else self.agent_location
-        obs_dict["target"] = None if self.target.grid_pos is None else self.target.grid_pos
-        obs_dict["rewards"] = None if len(self.reward_locations) == 0 else [rw for rw in self.reward_locations]
-
-        return obs_dict
-
-    def get_info(self):
-        return {
-            "distance": np.linalg.norm(
-                np.array(self.agent_location) - np.array(self.target.grid_pos), ord=1
-            )
-        }
 
     def register_object(self, cell: Cell) -> None:
         if cell.is_solid:
@@ -70,27 +55,38 @@ class SchoolEnv(gym.Env):
         self.agent_location = self.agent_reset_location
         self.reward_locations = self.reward_reset_locations
 
-        observation = self.get_obs()
-        info = self.get_info()
-
-        return observation, info
+        return self.get_obs()
     
-    def step(self, action):
-        temp_pos = self.agent_location
-        self.agent_location = np.array(self.agent_location) + np.array(action)
-        self.agent_location = np.clip(self.agent_location, 0, self.grid_size - 1)
-        self.agent_location = math_utils.np_to_tuple(self.agent_location)
+    def step(self, action: tuple[int, int], state: tuple[int, int] = None) -> Observation:
+        if (state is None):
+            backup_state = self.agent_location
+        else:
+            backup_state = state
+        
+        backup_state = (self.agent_location) if state is None else state
+        temp_state = (self.agent_location) if state is None else state
+        temp_state = np.array(temp_state) + np.array(action)
+        temp_state = np.clip(temp_state, 0, self.grid_size - 1)
+        temp_state = math_utils.np_to_tuple(temp_state)
 
-        cell: Cell = self.grid[self.agent_location]
+        cell: Cell = self.grid[temp_state]
 
         if cell.is_solid:
-            self.agent_location = temp_pos
-            cell: Cell = self.grid[self.agent_location]
+            temp_state = backup_state
+            cell: Cell = self.grid[temp_state]
 
-        observation = self.get_obs()
-        info = self.get_info()
+        obs = Observation(temp_state, cell.reward, cell.is_terminal)
 
-        return observation, cell.reward, cell.is_terminal, info
+        if (state is None):
+            self.agent_location = temp_state
+
+        return obs
+
+    def get_obs(self, state: tuple[int, int] = None, action: tuple[int, int] = None) -> Observation:
+        if (action is None):
+            return Observation(self.agent_location if state is None else state, self.grid[self.agent_location].reward, self.grid[self.agent_location].is_terminal)
+        else:
+            return self.step(action, state)
 
     def close(self):
         """Clean up resources (optional)."""
