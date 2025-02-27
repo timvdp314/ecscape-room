@@ -44,7 +44,7 @@ class MonteCarloAlgorithm(Algorithm):
             reward = 0.0
 
             for s in reversed(episode):
-                # Calculate state-action pair value
+                # Calculate state-action pair value*
                 reward = gamma_factor * reward + s[2]
 
                 # Only add return value if state-action pair has not been visited (i.e. first-visit only)

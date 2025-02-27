@@ -15,7 +15,8 @@ class ValueIterationAlgorithm(Algorithm):
 
         # Update the movement of the policy based on the best actions found.
         for position in optimal_actions:
-            self.policy[position] = optimal_actions[position]
+            self.policy[position].clear()
+            self.policy[position][optimal_actions[position]] = 1.0
 
         plot_vi_heatmap(self.grid_size, optimal_actions, possible_rewards)
 

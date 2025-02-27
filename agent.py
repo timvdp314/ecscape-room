@@ -1,10 +1,11 @@
 from typing import Callable
 import random
 
+from algorithms.algorithm import Algorithm
 from algorithms.dp.policy_iteration import PolicyIterationAlgorithm
 from algorithms.dp.value_iteration import ValueIterationAlgorithm
-from algorithms.algorithm import Algorithm
 from algorithms.mc.mcc import MonteCarloAlgorithm
+from algorithms.td.q_learning import QLearningAlgorithm
 from algorithms.utils import Observation, sample_policy_action
 
 class Agent:
@@ -16,9 +17,11 @@ class Agent:
         self.grid_action_cb: Callable[[tuple[int, int], tuple[int, int]], Observation] = grid_action_cb
 
         self.policy: dict[tuple[int, int], dict[tuple[int, int], float]] = dict()
+
         # self.algorithm = MonteCarloAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
         # self.algorithm = PolicyIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
-        self.algorithm = ValueIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+        # self.algorithm = ValueIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+        self.algorithm = QLearningAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
 
         self.init_policy()
 
