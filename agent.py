@@ -9,7 +9,7 @@ class Agent:
         self.img = img
         self.grid_pos = grid_pos
 
-        self.policy: Policy = MonteCarloControlPolicy(grid_pos, grid, grid_size)
+        self.policy: Policy = ValueIterationPolicy(grid_pos, grid, grid_size)
         self.last_reward_val = 0
 
     def action(self) -> tuple[int, int]:
