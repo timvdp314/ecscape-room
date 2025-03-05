@@ -1,12 +1,16 @@
 from abc import ABC, abstractmethod
+import random
 
+from cell import Cell
+
+# The default policy is a random policy with uniform action probabilities
 class Policy(ABC):
-    def __init__(self, grid_pos: (int, int), grid: dict[tuple[int, int]], grid_size: int = 6):
+    def __init__(self, grid_pos: tuple[int, int], grid: dict[tuple[int, int], Cell], grid_size: int = 6):
         super().__init__()
         self.grid_pos = grid_pos
         self.grid_size = grid_size
-        self.movement: dict[tuple[int, int]] = dict()
-        self.grid: dict[tuple[int, int]] = grid
+        self.movement: dict[tuple[int, int], dict[tuple[int, int], float]] = dict()
+        self.grid: dict[tuple[int, int], Cell] = grid
         self.init_policy()
 
     def init_policy(self):
@@ -32,10 +36,19 @@ class Policy(ABC):
         if not self.grid[new_pos].is_solid:
             self.movement[position][action] = 0
     
-    @abstractmethod
-    def move(self):
-        pass
+    def move(self, grid_pos: tuple[int, int] = None):
+        pos = (self.grid_pos) if grid_pos is None else grid_pos
+
+        num = random.uniform(0, 1)
+        threshold = 0.0
+
+        for act, prob in self.movement[pos].items():
+            threshold += prob
+            if num <= threshold:
+                return act
     
-    @abstractmethod
+        assert("Something is wrong with the agent's policy!")
+        return None
+    
     def terminate(self):
         pass
