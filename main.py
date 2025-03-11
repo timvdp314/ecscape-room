@@ -2,12 +2,13 @@ import logging
 
 from cell import Cell
 from env import SchoolEnv
-from agent import Agent
+from agent import Agent, AgentAlgorithm
 import pygame
 
 from gymnasium.envs.registration import register
 import gymnasium as gym
 
+import plot
 from disp import EnvRenderer
 from algorithms.utils import Observation
 
@@ -76,13 +77,15 @@ if __name__ == "__main__":
 
     env_objects: dict[str, Cell] = dict()
     env_objects["target"] = Cell((7,7), 15.0, "exam.png", True)
-    env_objects["pill1"] = Cell((3, 2), -2.0, "pill.png")
-    env_objects["pill2"] = Cell((0, 1), -8.0, "pill.png")
-    env_objects["pill4"] = Cell((1, 5), -8.0, "pill.png")
-    env_objects["pill5"] = Cell((3, 3), -8.0, "pill.png")
-    env_objects["pill6"] = Cell((3, 4), -8.0, "pill.png")
-    env_objects["pill7"] = Cell((5, 5), -8.0, "pill.png")
-    env_objects["pill8"] = Cell((3, 7), -8.0, "pill.png")
+    # env_objects["pill1"] = Cell((3, 2), -4.0, "pill.png")
+    env_objects["pill2"] = Cell((4, 1), -4.0, "pill.png")
+    env_objects["pill4"] = Cell((1, 5), -4.0, "pill.png")
+    env_objects["pill5"] = Cell((3, 3), -4.0, "pill.png")
+    # env_objects["pill6"] = Cell((2, 4), -4.0, "pill.png")
+    env_objects["pill7"] = Cell((5, 5), -4.0, "pill.png")
+    env_objects["pill8"] = Cell((3, 7), -4.0, "pill.png")
+    env_objects["pill9"] = Cell((6, 6), -4.0, "pill.png")
+    env_objects["pill10"] = Cell((0, 0), -4.0, "pill.png")
     env_objects["solid1"] = Cell((1,1), 0.0, None, False, True)
     env_objects["solid2"] = Cell((2,1), 0.0, None, False, True)
     env_objects["solid3"] = Cell((3,1), 0.0, None, False, True)
@@ -92,17 +95,33 @@ if __name__ == "__main__":
     for key, cell in env_objects.items():
         school_env.register_object(cell)
 
-    # The agent needs to be created AFTER all of the objects have been added to the environment.
-    agent = Agent(school_env.get_obs, agent_pos, grid_size)
-    agent.run_algorithm()
-    running = True
-
     obs: Observation = school_env.reset()
+
+    agent = Agent(school_env.get_obs, agent_pos, grid_size)
+    rewards: dict = dict()
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.MONTE_CARLO)
+    agent.run_algorithm(gamma_factor = 0.90, num_episodes = 200, epsilon_mod = 0.05)
+    rewards["monte-carlo"] = agent.algorithm.total_rewards
+    visits = agent.algorithm.total_state_visits
+    plot.plot_state_visits(visits, grid_size, 200, "Monte Carlo total state visits")
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.Q_LEARNING)
+    agent.run_algorithm(alpha_factor = 0.15, gamma_factor = 0.90, num_episodes = 200)
+    rewards["q-learning"] = agent.algorithm.total_rewards
+    visits = agent.algorithm.total_state_visits
+    plot.plot_state_visits(visits, grid_size, 200, "Q-Learning total state visits")
+
+    plot.plot_total_rewards(rewards, "Monte-Carlo vs. Q-Learning vs. SARSA total rewards per episode")
 
     fps = 60
     auto_run = False
     auto_run_timer = 0
     auto_run_max_time = fps
+
+    running = True
 
     while running:
         for event in pygame.event.get():

@@ -1,6 +1,7 @@
 import random
 from typing import Callable
 import logging
+import plot
 
 from algorithms.algorithm import Algorithm, Observation
 from algorithms.utils import sample_policy_action
@@ -11,15 +12,19 @@ class QLearningAlgorithm(Algorithm):
         super().__init__(policy, grid_action_cb, grid_pos, grid_size)
 
         self.q_table: dict[tuple[int, int], dict[tuple[int, int], float]] = dict()
+        self.total_rewards: list[float] = list()
+        self.total_state_visits: dict[tuple[int, int], int] = dict()
+        self.total_state_visits_tracker: dict[tuple[int, int], bool] = dict()
 
     def run(self, alpha_factor: float = 0.10, gamma_factor: float = 0.95, num_episodes: int = 200):
         episode: list[tuple[tuple[int, int], int]] = list()
 
-        total_rewards: list[float] = list()
+        self.total_rewards.clear()
 
         for x in range(self.grid_size):
             for y in range(self.grid_size):
                 self.q_table[(x,y)] = dict()
+                self.total_state_visits[(x,y)] = 0
 
                 for action in self.policy[(x,y)].keys():
                     self.q_table[(x,y)][action] = 0.0
@@ -31,11 +36,17 @@ class QLearningAlgorithm(Algorithm):
             epsilon_factor: float = 1.0 / (n + 1)
             curr_state = self.grid_action_cb(self.grid_pos)
 
+            self.total_state_visits_tracker.clear()
+
             while (True):
                 if (curr_state.is_terminal):
                     break
 
                 s: tuple[int, int] = curr_state.grid_pos
+
+                if (not s in self.total_state_visits_tracker):
+                    self.total_state_visits_tracker[s] = True
+                    self.total_state_visits[s] += 1
 
                 action: tuple[int, int] = self.get_action(s, epsilon_factor)
                 next_state: Observation = self.grid_action_cb(s, action)
@@ -47,9 +58,8 @@ class QLearningAlgorithm(Algorithm):
 
                 curr_state = next_state
             
-            total_rewards.append(total_reward)
+            self.total_rewards.append(total_reward)
 
-        logging.info(total_rewards)
         self.get_best_policy()
 
     def get_action(self, state: tuple[int, int], epsilon_factor: float):

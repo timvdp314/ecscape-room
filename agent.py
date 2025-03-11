@@ -1,5 +1,6 @@
 from typing import Callable
 import random
+from enum import Enum
 
 from algorithms.algorithm import Algorithm
 from algorithms.dp.policy_iteration import PolicyIterationAlgorithm
@@ -7,6 +8,12 @@ from algorithms.dp.value_iteration import ValueIterationAlgorithm
 from algorithms.mc.mcc import MonteCarloAlgorithm
 from algorithms.td.q_learning import QLearningAlgorithm
 from algorithms.utils import Observation, sample_policy_action
+
+class AgentAlgorithm(Enum):
+    POLICY_ITERATION = 0
+    VALUE_ITERATION = 1
+    MONTE_CARLO = 2
+    Q_LEARNING = 3
 
 class Agent:
     def __init__(self, grid_action_cb: Callable[[tuple[int, int], tuple[int, int]], Observation], 
@@ -18,10 +25,7 @@ class Agent:
 
         self.policy: dict[tuple[int, int], dict[tuple[int, int], float]] = dict()
 
-        # self.algorithm = MonteCarloAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
-        # self.algorithm = PolicyIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
-        # self.algorithm = ValueIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
-        self.algorithm = QLearningAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+        self.algorithm = None
 
         self.init_policy()
 
@@ -51,5 +55,19 @@ class Agent:
     def sample_action(self, grid_pos: tuple[int, int] = None) -> tuple[int, int]:
         return sample_policy_action(self.policy, self.grid_pos if grid_pos is None else grid_pos)
 
-    def run_algorithm(self):
-        self.algorithm.run()
+    def set_algorithm(self, algorithm : AgentAlgorithm):
+        match algorithm:
+            case AgentAlgorithm.POLICY_ITERATION:
+                self.algorithm = PolicyIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+            
+            case AgentAlgorithm.VALUE_ITERATION:
+                self.algorithm = ValueIterationAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+
+            case AgentAlgorithm.MONTE_CARLO:
+                self.algorithm = MonteCarloAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+
+            case AgentAlgorithm.Q_LEARNING:
+                self.algorithm = QLearningAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+
+    def run_algorithm(self, **kwargs):
+        self.algorithm.run(**kwargs)

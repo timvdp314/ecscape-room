@@ -18,7 +18,7 @@ class Algorithm(ABC):
     @abstractmethod
     def run(self):
         pass
-    
+
     @abstractmethod
     def terminate(self):
         pass
