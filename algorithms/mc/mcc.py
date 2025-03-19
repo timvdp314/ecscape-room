@@ -43,6 +43,7 @@ class MonteCarloAlgorithm(Algorithm):
 
             # The epsilon factor (or exploration factor) determines how eager the algorithm is to randomly choose an unoptimal path
             # As the algorithm starts to converge, the algorithm should focus more on exploitation, thus the epsilon factor get smaller
+            # The decline of the epsilon factor can be adjusted with "epsilon_mod"
             epsilon_factor: float = 1.0 / (n * epsilon_mod + 1)
 
             episode = generate_episode(self.policy, self.grid_action_cb, self.grid_pos)
