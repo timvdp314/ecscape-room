@@ -77,15 +77,13 @@ if __name__ == "__main__":
 
     env_objects: dict[str, Cell] = dict()
     env_objects["target"] = Cell((7,7), 15.0, "exam.png", True)
-    # env_objects["pill1"] = Cell((3, 2), -4.0, "pill.png")
-    env_objects["pill2"] = Cell((4, 1), -4.0, "pill.png")
-    env_objects["pill4"] = Cell((1, 5), -4.0, "pill.png")
-    env_objects["pill5"] = Cell((3, 3), -4.0, "pill.png")
-    # env_objects["pill6"] = Cell((2, 4), -4.0, "pill.png")
-    env_objects["pill7"] = Cell((5, 5), -4.0, "pill.png")
-    env_objects["pill8"] = Cell((3, 7), -4.0, "pill.png")
-    env_objects["pill9"] = Cell((6, 6), -4.0, "pill.png")
-    env_objects["pill10"] = Cell((0, 0), -4.0, "pill.png")
+    env_objects["pill1"] = Cell((4, 1), -4.0, "pill.png")
+    env_objects["pill2"] = Cell((1, 5), -4.0, "pill.png")
+    env_objects["pill3"] = Cell((3, 3), -4.0, "pill.png")
+    env_objects["pill4"] = Cell((5, 5), -4.0, "pill.png")
+    env_objects["pill5"] = Cell((3, 7), -4.0, "pill.png")
+    env_objects["pill6"] = Cell((6, 6), -4.0, "pill.png")
+    env_objects["pill7"] = Cell((0, 0), -4.0, "pill.png")
     env_objects["solid1"] = Cell((1,1), 0.0, None, False, True)
     env_objects["solid2"] = Cell((2,1), 0.0, None, False, True)
     env_objects["solid3"] = Cell((3,1), 0.0, None, False, True)
@@ -100,21 +98,40 @@ if __name__ == "__main__":
     agent = Agent(school_env.get_obs, agent_pos, grid_size)
     rewards: dict = dict()
 
+    alpha_factor = 0.15
+    gamma_factor = 0.90
+    num_episodes = 200
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.POLICY_ITERATION)
+    agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
+    plot.plot_pi_heatmap(grid_size, agent.policy, agent.algorithm.potential_rewards)
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.VALUE_ITERATION)
+    agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
+    plot.plot_vi_heatmap(grid_size, agent.algorithm.optimal_actions, agent.algorithm.potential_rewards)
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.SARSA)
+    agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, epsilon_factor = 0.05, num_episodes = num_episodes)
+    rewards["SARSA"] = agent.algorithm.total_rewards
+    plot.plot_sarsa_heatmap(grid_size, agent.policy, agent.algorithm.state_values)
+    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "SARSA total state visits (normalized)")
+
     agent.init_policy()
     agent.set_algorithm(AgentAlgorithm.MONTE_CARLO)
-    agent.run_algorithm(gamma_factor = 0.90, num_episodes = 200, epsilon_mod = 0.05)
-    rewards["monte-carlo"] = agent.algorithm.total_rewards
-    visits = agent.algorithm.total_state_visits
-    plot.plot_state_visits(visits, grid_size, 200, "Monte Carlo total state visits")
+    agent.run_algorithm(gamma_factor = gamma_factor, num_episodes = num_episodes, epsilon_mod = 0.05)
+    rewards["Monte Carlo"] = agent.algorithm.total_rewards
+    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Monte Carlo total state visits (normalized)")
 
     agent.init_policy()
     agent.set_algorithm(AgentAlgorithm.Q_LEARNING)
-    agent.run_algorithm(alpha_factor = 0.15, gamma_factor = 0.90, num_episodes = 200)
-    rewards["q-learning"] = agent.algorithm.total_rewards
-    visits = agent.algorithm.total_state_visits
-    plot.plot_state_visits(visits, grid_size, 200, "Q-Learning total state visits")
+    agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, num_episodes = num_episodes)
+    rewards["Q-Learning"] = agent.algorithm.total_rewards
+    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Q-Learning total state visits (normalized)")
 
-    plot.plot_total_rewards(rewards, "Monte-Carlo vs. Q-Learning vs. SARSA total rewards per episode")
+    plot.plot_total_rewards(rewards, "Monte-Carlo vs. Q-Learning vs. SARSA total cumulative rewards per episode", alpha_factor, gamma_factor, num_episodes)
 
     fps = 60
     auto_run = False

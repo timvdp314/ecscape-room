@@ -1,12 +1,8 @@
-import matplotlib.pyplot as plt
-from abc import ABC
 from typing import Callable
 import numpy as np
 
 from algorithms.algorithm import Algorithm
-from algorithms.utils import Observation
-from cell import Cell
-from algorithms.utils import generate_episode
+from algorithms.utils import Observation, generate_episode
 
 class MonteCarloAlgorithm(Algorithm):
     def __init__(self, policy: dict[tuple[int, int], dict[tuple[int, int], float]], grid_action_cb: Callable[[tuple[int, int], tuple[int, int]], Observation], 

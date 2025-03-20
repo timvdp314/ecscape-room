@@ -1,7 +1,5 @@
 import random
 from typing import Callable
-import logging
-import plot
 
 from algorithms.algorithm import Algorithm, Observation
 from algorithms.utils import sample_policy_action
@@ -17,8 +15,6 @@ class QLearningAlgorithm(Algorithm):
         self.total_state_visits_tracker: dict[tuple[int, int], bool] = dict()
 
     def run(self, alpha_factor: float = 0.10, gamma_factor: float = 0.95, num_episodes: int = 200):
-        episode: list[tuple[tuple[int, int], int]] = list()
-
         # Total rewards tracker (only for plotting total rewards, not functionally required)
         self.total_rewards.clear()
 
@@ -33,7 +29,6 @@ class QLearningAlgorithm(Algorithm):
 
         for n in range(num_episodes):
             total_reward: float = 0.0
-            episode.clear()
 
             epsilon_factor: float = 1.0 / (n + 1)
             curr_state = self.grid_action_cb(self.grid_pos)
@@ -54,7 +49,7 @@ class QLearningAlgorithm(Algorithm):
                     self.total_state_visits[s] += 1
 
                 # Perform action using behaviour policy, observe reward and next state
-                action: tuple[int, int] = self.get_action(s, epsilon_factor)
+                action: tuple[int, int] = self.epsilon_greedy(s, epsilon_factor)
                 next_state: Observation = self.grid_action_cb(s, action)
                 total_reward += next_state.reward
 
@@ -71,8 +66,8 @@ class QLearningAlgorithm(Algorithm):
         # Extract target policy
         self.get_best_policy()
 
-    def get_action(self, state: tuple[int, int], epsilon_factor: float):
-        # epsilon-greedy action select (policy is assumed to be random until the end of the algorithm)
+    def epsilon_greedy(self, state: tuple[int, int], epsilon_factor: float):
+        # Epsilon-greedy action select (policy is assumed to be random until the end of the algorithm)
         if (random.uniform(0, 1) < epsilon_factor):
             return sample_policy_action(self.policy, state)
         else:

@@ -6,6 +6,7 @@ from algorithms.algorithm import Algorithm
 from algorithms.dp.policy_iteration import PolicyIterationAlgorithm
 from algorithms.dp.value_iteration import ValueIterationAlgorithm
 from algorithms.mc.mcc import MonteCarloAlgorithm
+from algorithms.td.sarsa import TDSarsaAlgorithm
 from algorithms.td.q_learning import QLearningAlgorithm
 from algorithms.utils import Observation, sample_policy_action
 
@@ -13,7 +14,8 @@ class AgentAlgorithm(Enum):
     POLICY_ITERATION = 0
     VALUE_ITERATION = 1
     MONTE_CARLO = 2
-    Q_LEARNING = 3
+    SARSA = 3
+    Q_LEARNING = 4
 
 class Agent:
     def __init__(self, grid_action_cb: Callable[[tuple[int, int], tuple[int, int]], Observation], 
@@ -65,6 +67,9 @@ class Agent:
 
             case AgentAlgorithm.MONTE_CARLO:
                 self.algorithm = MonteCarloAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
+
+            case AgentAlgorithm.SARSA:
+                self.algorithm = TDSarsaAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
 
             case AgentAlgorithm.Q_LEARNING:
                 self.algorithm = QLearningAlgorithm(self.policy, self.grid_action_cb, self.grid_pos, self.grid_size)
