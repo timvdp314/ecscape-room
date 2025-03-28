@@ -2,13 +2,15 @@ import logging
 
 from cell import Cell
 from env import SchoolEnv
-from agent import Agent
+from agent import Agent, AgentAlgorithm
 import pygame
 
 from gymnasium.envs.registration import register
 import gymnasium as gym
 
+import plot
 from disp import EnvRenderer
+from algorithms.utils import Observation
 
 # Configure the logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s: [%(levelname)s] %(message)s')
@@ -17,9 +19,9 @@ def sim_step(env: gym.Env, agent: Agent, action: tuple[int, int] = None):
     real_action = action
 
     if (action is None):
-        real_action = agent.action()
+        real_action = agent.sample_action()
 
-    obs, reward, done, info = env.step(real_action)
+    obs: Observation = env.step(real_action)
 
     step_str: dict[tuple[int, int], str] = {
         (-1, 0): "LEFT",
@@ -28,21 +30,18 @@ def sim_step(env: gym.Env, agent: Agent, action: tuple[int, int] = None):
         (0, 1): "DOWN"
     }
 
-    agent.set_position(obs["agent"])
+    agent.grid_pos = obs.grid_pos
 
-    logging.info("[SIMULATION STEP, {}] Obtained reward: {}".format(step_str[real_action], reward))
+    logging.info("[SIMULATION STEP, {}] Obtained reward: {}".format(step_str[real_action], obs.reward))
 
-    return reward, done, info
+    return obs.reward, obs.is_terminal
 
 
 def sim_reset(env: gym.Env, agent: Agent):
-    obs, info = env.reset()
-    agent.set_position(obs["agent"])
+    obs: Observation = env.reset()
+    agent.grid_pos = obs.grid_pos
 
     logging.info("[SIMULATION RESET]")
-
-    return info
-
 
 def sim_render(renderer: EnvRenderer, objects: dict[str, Cell], agent: Agent):
     renderer.clear_frame()
@@ -54,7 +53,7 @@ def sim_render(renderer: EnvRenderer, objects: dict[str, Cell], agent: Agent):
         else:
             renderer.draw_object(cell.grid_pos, cell.img)
 
-    renderer.draw_object(agent.get_position(), agent.img)
+    renderer.draw_object(agent.grid_pos, agent.img)
     renderer.render_frame()
 
 
@@ -78,11 +77,13 @@ if __name__ == "__main__":
 
     env_objects: dict[str, Cell] = dict()
     env_objects["target"] = Cell((7,7), 15.0, "exam.png", True)
-    env_objects["pill1"] = Cell((3, 2), -15.0, "pill.png")
-    env_objects["pill2"] = Cell((0, 1), -8.0, "pill.png")
-    env_objects["pill4"] = Cell((1, 5), -8.0, "pill.png")
-    env_objects["pill5"] = Cell((3, 3), -8.0, "pill.png")
-    env_objects["pill6"] = Cell((3, 7), -8.0, "pill.png")
+    env_objects["pill1"] = Cell((4, 1), -4.0, "pill.png")
+    env_objects["pill2"] = Cell((1, 5), -4.0, "pill.png")
+    env_objects["pill3"] = Cell((3, 3), -4.0, "pill.png")
+    env_objects["pill4"] = Cell((5, 5), -4.0, "pill.png")
+    env_objects["pill5"] = Cell((3, 7), -4.0, "pill.png")
+    env_objects["pill6"] = Cell((6, 6), -4.0, "pill.png")
+    env_objects["pill7"] = Cell((0, 0), -4.0, "pill.png")
     env_objects["solid1"] = Cell((1,1), 0.0, None, False, True)
     env_objects["solid2"] = Cell((2,1), 0.0, None, False, True)
     env_objects["solid3"] = Cell((3,1), 0.0, None, False, True)
@@ -92,16 +93,52 @@ if __name__ == "__main__":
     for key, cell in env_objects.items():
         school_env.register_object(cell)
 
-    # The agent needs to be created AFTER all of the objects have been added to the environment.
-    agent = Agent(school_env.grid, agent_pos, grid_size)
-    running = True
+    obs: Observation = school_env.reset()
 
-    obs, info = school_env.reset()
+    agent = Agent(school_env.get_obs, agent_pos, grid_size)
+    rewards: dict = dict()
+
+    alpha_factor = 0.15
+    gamma_factor = 0.90
+    num_episodes = 200
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.POLICY_ITERATION)
+    agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
+    plot.plot_pi_heatmap(grid_size, agent.policy, agent.algorithm.potential_rewards)
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.VALUE_ITERATION)
+    agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
+    plot.plot_vi_heatmap(grid_size, agent.algorithm.optimal_actions, agent.algorithm.potential_rewards)
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.SARSA)
+    agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, epsilon_factor = 0.05, num_episodes = num_episodes)
+    rewards["SARSA"] = agent.algorithm.total_rewards
+    plot.plot_sarsa_heatmap(grid_size, agent.policy, agent.algorithm.state_values)
+    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "SARSA total state visits (normalized)")
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.MONTE_CARLO)
+    agent.run_algorithm(gamma_factor = gamma_factor, num_episodes = num_episodes, epsilon_mod = 0.05)
+    rewards["Monte Carlo"] = agent.algorithm.total_rewards
+    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Monte Carlo total state visits (normalized)")
+
+    agent.init_policy()
+    agent.set_algorithm(AgentAlgorithm.Q_LEARNING)
+    agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, num_episodes = num_episodes)
+    rewards["Q-Learning"] = agent.algorithm.total_rewards
+    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Q-Learning total state visits (normalized)")
+
+    plot.plot_total_rewards(rewards, "Monte-Carlo vs. Q-Learning vs. SARSA total cumulative rewards per episode", alpha_factor, gamma_factor, num_episodes)
 
     fps = 60
     auto_run = False
     auto_run_timer = 0
     auto_run_max_time = fps
+
+    running = True
 
     while running:
         for event in pygame.event.get():
@@ -113,7 +150,7 @@ if __name__ == "__main__":
                         case pygame.K_p:
                             auto_run = not auto_run
                         case pygame.K_r:
-                            info = sim_reset(school_env, agent)
+                            sim_reset(school_env, agent)
                         case pygame.K_EQUALS:
                             auto_run_max_time = max(auto_run_max_time - 5, 1)
                             logging.info("Simulation speed: {:.2f} steps per second".format(fps / auto_run_max_time))
@@ -126,7 +163,7 @@ if __name__ == "__main__":
                             auto_run = not auto_run
                             continue
                         case pygame.K_SPACE:
-                            action = agent.action()
+                            action = agent.sample_action()
                         case pygame.K_LEFT:
                             action = (-1, 0)
                         case pygame.K_RIGHT:
@@ -136,7 +173,7 @@ if __name__ == "__main__":
                         case pygame.K_DOWN:
                             action = (0, 1)
                         case pygame.K_r:
-                            info = sim_reset(school_env, agent)
+                            sim_reset(school_env, agent)
                             action = None
                         case default:
                             action = None
@@ -144,7 +181,7 @@ if __name__ == "__main__":
                     if (action is None):
                         continue
 
-                    reward, done, info = sim_step(school_env, agent, action)
+                    reward, done = sim_step(school_env, agent, action)
 
                     if done:
                         running = False
@@ -155,7 +192,7 @@ if __name__ == "__main__":
             auto_run_timer += 1
 
             if (auto_run_timer >= auto_run_max_time):
-                reward, done, info = sim_step(school_env, agent)
+                reward, done = sim_step(school_env, agent)
 
                 if done:
                     running = False

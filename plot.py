@@ -1,44 +1,59 @@
-import random
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 from typing import Callable
 
-import matplotlib.pyplot as plt
+def plot_results(sarsa_values, q_values, sarsa_policy, q_policy, title="SARSA vs Q-Learning"):
+    """
+    Compares SARSA and Q-Learning by visualizing their reward values as heatmaps and overlaying arrows for policies.
 
-from cell import Cell
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    
+    arrow_map = {0: (0, -0.3), 1: (0, 0.3), 2: (-0.3, 0), 3: (0.3, 0)}
+    action_symbols = {0: "↑", 1: "↓", 2: "←", 3: "→"}
+    
+    for ax, values, policy, method in zip(axes, [sarsa_values, q_values], [sarsa_policy, q_policy], ["SARSA", "Q-Learning"]):
+        img = ax.imshow(values, cmap="coolwarm", interpolation="nearest")
+        for i in range(values.shape[0]):
+            for j in range(values.shape[1]):
+                action = policy[i, j]
+                dx, dy = arrow_map.get(action, (0, 0))
+                ax.arrow(j, i, dx, dy, color="black", head_width=0.15)
+                ax.text(j, i, action_symbols.get(action, ""), ha="center", va="center", fontsize=14, color="white")
+        ax.set_title(f"{method} Policy")
+        ax.set_xticks([])
+        ax.set_yticks([])
+    
+    plt.suptitle(title)
+    fig.colorbar(img, ax=axes.ravel().tolist(), location='right', label="State Values")
+    plt.show()
 
+def plot_total_rewards(rewards: dict[str, list[float]], title: str, alpha_factor: float, gamma_factor: float, num_episodes: int):
+    """Plots the learning curves of SARSA and Q-Learning."""
+    plt.figure(figsize=(8, 5))
 
-def init_policy(grid: dict[tuple[int, int], Cell], grid_size: int, movement: dict[tuple[int, int], dict[tuple[int, int], float]]) -> None:
-    for x in range(0, grid_size):
-        for y in range(0, grid_size):
-            movement[(x, y)] = dict()
-            if x > 0:
-                add_action(grid, movement, (x, y), (-1, 0))
-            if x < grid_size - 1:
-                add_action(grid, movement, (x, y), (1, 0))
-            if y > 0:
-                add_action(grid, movement, (x, y), (0, -1))
-            if y < grid_size - 1:
-                add_action(grid, movement, (x, y), (0, 1))
+    for key, vals in rewards.items():
+        plt.plot(vals, label = key)
 
-            probability: float = 1 / len(movement[(x, y)])
-            for key in movement[(x, y)]:
-                movement[(x, y)][key] = probability
+    plt.xlabel('Episodes')
+    plt.ylabel('Cumulative reward per episode')
+    plt.suptitle("Alpha = {:.2f}, Gamma = {:.2f}, Num. episodes = {}".format(alpha_factor, gamma_factor, num_episodes))
+    plt.title(title)
+    plt.legend()
+    plt.show()
 
-def add_action(grid, movement, position, action) -> None:
-    new_pos = (position[0] + action[0], position[1] + action[1])
-    if not grid[new_pos].is_solid:
-        movement[position][action] = 0
+def plot_state_visits(grid: dict[tuple[int, int], int], grid_size: int, episode_length: int, title: str):
+    heatmap_data = np.zeros((grid_size, grid_size))
 
-def select_prob_move(grid_pos: (int, int), movement: dict[tuple[int, int], dict[tuple[int, int], float]]) -> (int, int):
-    num = random.uniform(0, 1)
-    threshold = 0.0
+    for (x, y), val in grid.items():
+        heatmap_data[(y, x)] = float(val) / episode_length
 
-    for act, prob in movement[grid_pos].items():
-        threshold += prob
-        if num <= threshold:
-            return act
+    plt.figure(figsize=(6, 5))  # Adjust figure size
+    sns.heatmap(heatmap_data, annot=True, cmap="coolwarm", fmt=".2f")
 
-    assert "Something is wrong with the agent's policy!"
-    return None
+    plt.title(title)
+    plt.show()
 
 # Plot a Policy Iteration Heatmap.
 def plot_pi_heatmap(grid_size: int, movement: dict[(int, int)], potential_rewards) -> None:
