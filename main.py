@@ -1,4 +1,5 @@
 import logging
+import sys
 
 from cell import Cell
 from env import SchoolEnv
@@ -53,9 +54,8 @@ def sim_render(renderer: EnvRenderer, objects: dict[str, Cell], agent: Agent):
         else:
             renderer.draw_object(cell.grid_pos, cell.img)
 
-    renderer.draw_object(agent.grid_pos, agent.img)
+    renderer.draw_object(agent.grid_pos, agent.img, (2, 2))
     renderer.render_frame()
-
 
 if __name__ == "__main__":
     register(
@@ -98,45 +98,66 @@ if __name__ == "__main__":
     agent = Agent(school_env.get_obs, agent_pos, grid_size)
     rewards: dict = dict()
 
-    alpha_factor = 0.15
+    # Default hyperparameters
+    alpha_factor = 0.10
     gamma_factor = 0.90
     num_episodes = 200
 
     agent.init_policy()
-    agent.set_algorithm(AgentAlgorithm.POLICY_ITERATION)
-    agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
-    plot.plot_pi_heatmap(grid_size, agent.policy, agent.algorithm.potential_rewards)
 
-    agent.init_policy()
-    agent.set_algorithm(AgentAlgorithm.VALUE_ITERATION)
-    agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
-    plot.plot_vi_heatmap(grid_size, agent.algorithm.optimal_actions, agent.algorithm.potential_rewards)
+    if (len(sys.argv) < 2):
+        print("Error: no algorithm given\n\t- Usage: python main.py <algorithm> (PI, VI, MC, SARSA, QLEARNING, CUMU_REWARDS)")
+        sys.exit()
 
-    agent.init_policy()
-    agent.set_algorithm(AgentAlgorithm.SARSA)
-    agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, epsilon_factor = 0.05, num_episodes = num_episodes)
-    rewards["SARSA"] = agent.algorithm.total_rewards
-    plot.plot_sarsa_heatmap(grid_size, agent.policy, agent.algorithm.state_values)
-    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "SARSA total state visits (normalized)")
+    # Parse input parameter
+    if (sys.argv[1] == "PI"):
+        agent.set_algorithm(AgentAlgorithm.POLICY_ITERATION)
+        agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
+        plot.plot_pi_heatmap(grid_size, agent.policy, agent.algorithm.potential_rewards)
+    elif (sys.argv[1] == "VI"):
+        agent.set_algorithm(AgentAlgorithm.VALUE_ITERATION)
+        agent.run_algorithm(gamma_factor = gamma_factor, theta_factor = 0.001)
+        plot.plot_vi_heatmap(grid_size, agent.algorithm.optimal_actions, agent.algorithm.potential_rewards)
+    elif (sys.argv[1] == "MC"):
+        agent.set_algorithm(AgentAlgorithm.MONTE_CARLO)
+        agent.run_algorithm(gamma_factor = gamma_factor, num_episodes = num_episodes, epsilon_mod = 0.05)
+        rewards["Monte Carlo"] = agent.algorithm.total_rewards
+        plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Monte Carlo total state visits (normalized)")
+    elif (sys.argv[1] == "SARSA"):
+        agent.set_algorithm(AgentAlgorithm.SARSA)
+        agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, epsilon_factor = 0.05, num_episodes = num_episodes)
+        rewards["SARSA"] = agent.algorithm.total_rewards
+        plot.plot_sarsa_heatmap(grid_size, agent.policy, agent.algorithm.state_values)
+        plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "SARSA total state visits (normalized)")
+    elif (sys.argv[1] == "QLEARNING"):
+        agent.set_algorithm(AgentAlgorithm.Q_LEARNING)
+        agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, num_episodes = num_episodes)
+        rewards["Q-Learning"] = agent.algorithm.total_rewards
+        plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Q-Learning total state visits (normalized)")
+    elif (sys.argv[1] == "CUMU_REWARDS"):
+        agent.set_algorithm(AgentAlgorithm.MONTE_CARLO)
+        agent.run_algorithm(gamma_factor = gamma_factor, num_episodes = num_episodes, epsilon_mod = 0.05)
+        rewards["Monte Carlo"] = agent.algorithm.total_rewards
 
-    agent.init_policy()
-    agent.set_algorithm(AgentAlgorithm.MONTE_CARLO)
-    agent.run_algorithm(gamma_factor = gamma_factor, num_episodes = num_episodes, epsilon_mod = 0.05)
-    rewards["Monte Carlo"] = agent.algorithm.total_rewards
-    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Monte Carlo total state visits (normalized)")
+        agent.init_policy()
+        agent.set_algorithm(AgentAlgorithm.SARSA)
+        agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, epsilon_factor = 0.05, num_episodes = num_episodes)
+        rewards["SARSA"] = agent.algorithm.total_rewards
 
-    agent.init_policy()
-    agent.set_algorithm(AgentAlgorithm.Q_LEARNING)
-    agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, num_episodes = num_episodes)
-    rewards["Q-Learning"] = agent.algorithm.total_rewards
-    plot.plot_state_visits(agent.algorithm.total_state_visits, grid_size, num_episodes, "Q-Learning total state visits (normalized)")
+        agent.init_policy()
+        agent.set_algorithm(AgentAlgorithm.Q_LEARNING)
+        agent.run_algorithm(alpha_factor = alpha_factor, gamma_factor = gamma_factor, num_episodes = num_episodes)
+        rewards["Q-Learning"] = agent.algorithm.total_rewards
 
-    plot.plot_total_rewards(rewards, "Monte-Carlo vs. Q-Learning vs. SARSA total cumulative rewards per episode", alpha_factor, gamma_factor, num_episodes)
+        plot.plot_total_rewards(rewards, "Monte-Carlo vs. Q-Learning vs. SARSA total cumulative rewards per episode", alpha_factor, gamma_factor, num_episodes)
+    else:
+        print("Error: incorrect parameter '{}'\n\t- Usage: python main.py <algorithm> (PI, VI, MC, SARSA, QLEARNING, CUMU_REWARDS)".format(sys.argv[1]))
+        sys.exit()
 
     fps = 60
-    auto_run = False
+    auto_run = True
     auto_run_timer = 0
-    auto_run_max_time = fps
+    auto_run_max_time = fps / 2 # Default speed is 0.5 sec/step
 
     running = True
 

@@ -67,7 +67,7 @@ class QLearningAlgorithm(Algorithm):
         self.get_best_policy()
 
     def epsilon_greedy(self, state: tuple[int, int], epsilon_factor: float):
-        # Epsilon-greedy action select (policy is assumed to be random until the end of the algorithm)
+        # Epsilon-greedy action select (policy is assumed to be random until the end of the algorithm, thus sample policy will result in a random action)
         if (random.uniform(0, 1) < epsilon_factor):
             return sample_policy_action(self.policy, state)
         else:
